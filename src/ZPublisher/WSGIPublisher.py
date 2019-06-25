@@ -330,6 +330,20 @@ def publish_module(environ, start_response,
         for i in range(getattr(new_request, 'retry_max_count', 3) + 1):
             request = new_request
             response = new_response
+
+            def write_to_response(b):
+                status, headers = response.finalize()
+                print ('finalized response', status, headers)
+                status = '200 OK (well maybe)'
+                # ( finalize will set a content-length of 0 by default, we don't want this if streaming )
+                headers = [
+                    (h, v) for (h, v) in headers
+                    if h.lower() not in ('content-length', )
+                    and v != '0']
+                response.write = start_response(status, headers)
+                return response.write(b)
+            response.write = write_to_response
+
             setRequest(request)
             try:
                 with load_app(module_info) as new_mod_info:
@@ -346,17 +360,19 @@ def publish_module(environ, start_response,
                 request.close()
                 clearRequest()
 
-        # Start the WSGI server response
-        status, headers = response.finalize()
-        start_response(status, headers)
 
-        if isinstance(response.body, _FILE_TYPES) or \
-           IUnboundStreamIterator.providedBy(response.body):
-            result = response.body
-        else:
-            # If somebody used response.write, that data will be in the
-            # response.stdout BytesIO, so we put that before the body.
-            result = (response.stdout.getvalue(), response.body)
+        if not response._streaming:
+            # Start the WSGI server response
+            status, headers = response.finalize()
+            start_response(status, headers)
+
+            if isinstance(response.body, _FILE_TYPES) or \
+               IUnboundStreamIterator.providedBy(response.body):
+                result = response.body
+            else:
+                # If somebody used response.write, that data will be in the
+                # response.stdout BytesIO, so we put that before the body.
+                result = (response.stdout.getvalue(), response.body)
 
         for func in response.after_list:
             func()
