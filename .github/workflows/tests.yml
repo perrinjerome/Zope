@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         os:
-        - ["macos", "macos-latest"]
+        - ["macos", "macos-12"]
         config:
         # [Python version, tox env]
         - ["3.10",  "py310"]
