@@ -26,11 +26,10 @@ class MapplyTests(unittest.TestCase):
         def compute(a, b, c=4):
             return '%d%d%d' % (a, b, c)
 
-        values = {'a': 2, 'b': 3, 'c': 5}
-        v = mapply(compute, (), values)
+        v = mapply(compute, (), {'a': 2, 'b': 3, 'c': 5})
         self.assertEqual(v, '235')
 
-        v = mapply(compute, (7,), values)
+        v = mapply(compute, (7,), {'b': 3, 'c': 5})
         self.assertEqual(v, '735')
 
     def testClass(self):
@@ -104,3 +103,19 @@ class MapplyTests(unittest.TestCase):
 
         self.assertEqual(mapply(f, ("a",), {}), (("a", "b"), {}))
         self.assertEqual(mapply(f, (), {"a": "A", "b": "B"}), (("A", "B"), {}))
+
+    def testErrors(self):
+        def compute(a, b, c=4):
+            return '%d%d%d' % (a, b, c)
+
+        with self.assertRaisesRegex(TypeError, 'argument a was omitted'):
+            mapply(compute, (), {})
+
+        with self.assertRaisesRegex(TypeError, 'argument b was omitted'):
+            mapply(compute, (1, ), {})
+
+        with self.assertRaisesRegex(TypeError, 'multiple values for argument b'):
+            mapply(compute, (1, 2, ), {'b': 3})
+
+        with self.assertRaisesRegex(TypeError, 'too many arguments'):
+            mapply(compute, (1, 2, 3, 4), {})

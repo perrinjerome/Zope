@@ -23,7 +23,7 @@ def default_call_object(object, args, context):
 
 
 def default_missing_name(name, context):
-    raise TypeError('argument %s was ommitted' % name)
+    raise TypeError('argument %s was omitted' % name)
 
 
 def default_handle_class(klass, context):
@@ -74,6 +74,9 @@ def mapply(object, positional=(), keyword={},
             positional.insert(0, missing_name('self', context))
         if len(positional) > nargs:
             raise TypeError('too many arguments')
+        for a, name in zip(positional, names):
+            if name in keyword:
+                raise TypeError('multiple values for argument %s' % name)
         args = positional
     else:
         if bind and nargs and names[0] == 'self':
