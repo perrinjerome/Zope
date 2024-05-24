@@ -1,3 +1,5 @@
+X  run test
+
 .. image:: https://github.com/zopefoundation/Zope/actions/workflows/tests.yml/badge.svg
         :target: https://github.com/zopefoundation/Zope/actions/workflows/tests.yml
 
